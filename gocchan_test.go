@@ -7,6 +7,7 @@ import (
 )
 
 type TestFeature struct {
+	t                *testing.T
 	name             string
 	active           bool
 	calledBy         []string
@@ -24,6 +25,18 @@ func (f *TestFeature) Func1(context interface{}) {
 
 func (f *TestFeature) Func2(context interface{}) {
 	f.calledBy = append(f.calledBy, fmt.Sprintf("Func2:%v", context))
+}
+
+func (f *TestFeature) Func3(context string) {
+	f.calledBy = append(f.calledBy, fmt.Sprintf("Func3:%v", context))
+}
+
+func (f *TestFeature) Func4(context interface{}, other interface{}) {
+	f.t.Errorf("Func4 is never called")
+}
+
+func (f *TestFeature) Func5() {
+	f.t.Errorf("Func5 is never called")
 }
 
 func (f *TestFeature) FuncPanic(context interface{}) {
@@ -48,7 +61,7 @@ func Test_AddFeature(t *testing.T) {
 		if _, exists := featureStatus[name]; exists {
 			t.Fatalf("Feature %v has already been added", name)
 		}
-		feature := &TestFeature{"test1", true, nil, nil}
+		feature := &TestFeature{t, "test1", true, nil, nil}
 		AddFeature("test", feature)
 		actual := featureStatus[name]
 		expected := &status{feature: feature, fault: false}
@@ -60,7 +73,7 @@ func Test_AddFeature(t *testing.T) {
 
 func Test_Invoke(t *testing.T) {
 	init := func(name string, active bool) *TestFeature {
-		feature := &TestFeature{name, active, nil, nil}
+		feature := &TestFeature{t, name, active, nil, nil}
 		featureStatus["testfeature"] = &status{
 			feature: feature,
 			fault:   false,
@@ -194,4 +207,64 @@ func Test_Invoke(t *testing.T) {
 			t.Errorf("Expect %q, but %q", expected, actual)
 		}
 	}
+
+	func() {
+		feature := init("test8", true)
+		Invoke("test", "testfeature", "Func3", func() {
+			t.Errorf("defaultFunc has been called")
+		})
+		actual := feature.calledBy
+		expected := []string{"Func3:test"}
+		if !reflect.DeepEqual(actual, expected) {
+			t.Errorf("Expect %q, but %q", expected, actual)
+		}
+	}()
+
+	func() {
+		feature := init("test9", true)
+		called := false
+		Invoke(1, "testfeature", "Func3", func() {
+			called = true
+		})
+		if !called {
+			t.Errorf("defaultFunc hasn't been called by argument type mismatch")
+		}
+		actual := feature.calledBy
+		expected := []string(nil)
+		if !reflect.DeepEqual(actual, expected) {
+			t.Errorf("Expect %q, but %q", expected, actual)
+		}
+	}()
+
+	func() {
+		feature := init("test9", true)
+		called := false
+		Invoke("test", "testfeature", "Func4", func() {
+			called = true
+		})
+		if !called {
+			t.Errorf("defaultFunc hasn't been called by too many arguments definition")
+		}
+		actual := feature.calledBy
+		expected := []string(nil)
+		if !reflect.DeepEqual(actual, expected) {
+			t.Errorf("Expect %q, but %q", expected, actual)
+		}
+	}()
+
+	func() {
+		feature := init("test10", true)
+		called := false
+		Invoke("test", "testfeature", "Func5", func() {
+			called = true
+		})
+		if !called {
+			t.Errorf("defaultFunc hasn't been called by too few arguments definition")
+		}
+		actual := feature.calledBy
+		expected := []string(nil)
+		if !reflect.DeepEqual(actual, expected) {
+			t.Errorf("Expect %q, but %q", expected, actual)
+		}
+	}()
 }

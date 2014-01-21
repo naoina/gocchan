@@ -7,10 +7,12 @@ import (
 
 func Test_EventType_String(t *testing.T) {
 	for expected, ev := range map[string]EventType{
-		"EventFeatureHasNotBeenAdded": EventFeatureHasNotBeenAdded,
-		"EventFeatureMethodMissing":   EventFeatureMethodMissing,
-		"EventFeatureWasFault":        EventFeatureWasFault,
-		"unknown":                     -1,
+		"EventFeatureHasNotBeenAdded":                EventFeatureHasNotBeenAdded,
+		"EventFeatureMethodMissing":                  EventFeatureMethodMissing,
+		"EventFeatureWasFault":                       EventFeatureWasFault,
+		"EventFeatureMethodInvalidNumberOfArguments": EventFeatureMethodInvalidNumberOfArguments,
+		"EventFeatureMethodSignatureMismatch":        EventFeatureMethodSignatureMismatch,
+		"unknown": -1,
 	} {
 		actual := ev.String()
 		if !reflect.DeepEqual(actual, expected) {

@@ -7,6 +7,8 @@ const (
 	EventFeatureHasNotBeenAdded EventType = iota + 1
 	EventFeatureMethodMissing
 	EventFeatureWasFault
+	EventFeatureMethodInvalidNumberOfArguments
+	EventFeatureMethodSignatureMismatch
 )
 
 // String returns a name of event type.
@@ -18,6 +20,10 @@ func (typ EventType) String() string {
 		return "EventFeatureMethodMissing"
 	case EventFeatureWasFault:
 		return "EventFeatureWasFault"
+	case EventFeatureMethodInvalidNumberOfArguments:
+		return "EventFeatureMethodInvalidNumberOfArguments"
+	case EventFeatureMethodSignatureMismatch:
+		return "EventFeatureMethodSignatureMismatch"
 	}
 	return "unknown"
 }

@@ -72,9 +72,21 @@ func Invoke(context interface{}, featureName, funcName string, defaultFunc func(
 		notifier.NotifyAll(event)
 		panic(ErrInvokeDefault)
 	}
-	if status.feature.ActiveIf(context, options...) {
-		f.Call([]reflect.Value{reflect.ValueOf(context)})
-	} else {
+	if !status.feature.ActiveIf(context, options...) {
 		panic(ErrInvokeDefault)
 	}
+	ftype := f.Type()
+	if ftype.NumIn() != 1 {
+		err := fmt.Errorf("number of arguments must be one: method `%s` in feature `%s`", funcName, featureName)
+		event := NewEvent(EventFeatureMethodInvalidNumberOfArguments, err)
+		notifier.NotifyAll(event)
+		panic(ErrInvokeDefault)
+	}
+	if !reflect.TypeOf(context).ConvertibleTo(ftype.In(0)) {
+		err := fmt.Errorf("method signature mismatch: context is a type `%T`, but type `%s` is an argument type of the method `%s` in feature `%s`", context, ftype.In(0), funcName, featureName)
+		event := NewEvent(EventFeatureMethodSignatureMismatch, err)
+		notifier.NotifyAll(event)
+		panic(ErrInvokeDefault)
+	}
+	f.Call([]reflect.Value{reflect.ValueOf(context)})
 }
