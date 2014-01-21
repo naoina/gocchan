@@ -57,7 +57,8 @@ func Invoke(context interface{}, featureName, funcName string, defaultFunc func(
 		}
 	}()
 	if status == nil {
-		event := NewEvent(EventFeatureHasNotBeenAdded, fmt.Errorf("feature `%s` has not been added", featureName))
+		err := fmt.Errorf("feature has not been added: `%s`", featureName)
+		event := NewEvent(EventFeatureHasNotBeenAdded, err)
 		notifier.NotifyAll(event)
 		panic(ErrInvokeDefault)
 	}
@@ -66,7 +67,8 @@ func Invoke(context interface{}, featureName, funcName string, defaultFunc func(
 	}
 	f := reflect.ValueOf(status.feature).MethodByName(funcName)
 	if !f.IsValid() {
-		event := NewEvent(EventFeatureMethodMissing, fmt.Errorf("method `%v` is not found in feature `%v`", funcName, featureName))
+		err := fmt.Errorf("method is not found: `%s` in feature `%s`", funcName, featureName)
+		event := NewEvent(EventFeatureMethodMissing, err)
 		notifier.NotifyAll(event)
 		panic(ErrInvokeDefault)
 	}
