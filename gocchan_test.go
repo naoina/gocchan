@@ -84,7 +84,7 @@ func Test_Invoke(t *testing.T) {
 	func() {
 		init("test1", true)
 		called := false
-		Invoke(nil, "unknown", "Func1", func() {
+		Invoke("", "unknown", "Func1", func() {
 			called = true
 		})
 		if !called {
@@ -99,13 +99,13 @@ func Test_Invoke(t *testing.T) {
 			}
 		}()
 		init("test2", true)
-		Invoke(nil, "unknown", "Func1", nil)
+		Invoke("", "unknown", "Func1", nil)
 	}()
 
 	func() {
 		init("test3", true)
 		called := false
-		Invoke(nil, "testfeature", "unknown", func() {
+		Invoke("", "testfeature", "unknown", func() {
 			called = true
 		})
 		if !called {
@@ -120,7 +120,7 @@ func Test_Invoke(t *testing.T) {
 			}
 		}()
 		init("test4", true)
-		Invoke(nil, "testfeature", "unknown", nil)
+		Invoke("", "testfeature", "unknown", nil)
 	}()
 
 	func() {
@@ -140,7 +140,7 @@ func Test_Invoke(t *testing.T) {
 		init("test6", false)
 		for _, fname := range []string{"Func1", "Func2"} {
 			called := false
-			Invoke(nil, "testfeature", fname, func() {
+			Invoke("", "testfeature", fname, func() {
 				called = true
 			})
 			if !called {
@@ -265,6 +265,20 @@ func Test_Invoke(t *testing.T) {
 		expected := []string(nil)
 		if !reflect.DeepEqual(actual, expected) {
 			t.Errorf("Expect %q, but %q", expected, actual)
+		}
+	}()
+
+	func() {
+		for _, fname := range []string{"Func1", "Func2"} {
+			feature := init("test11", true)
+			Invoke(nil, "testfeature", fname, func() {
+				t.Errorf("defaultFunc has been called")
+			})
+			actual = feature.calledBy
+			expected = []string{fmt.Sprintf("%s:<nil>", fname)}
+			if !reflect.DeepEqual(actual, expected) {
+				t.Errorf("Expect %q, but %q", expected, actual)
+			}
 		}
 	}()
 }
