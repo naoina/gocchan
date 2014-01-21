@@ -2,6 +2,7 @@ package gocchan
 
 import (
 	"errors"
+	"fmt"
 	"reflect"
 )
 
@@ -49,6 +50,7 @@ func Invoke(context interface{}, featureName, funcName string, defaultFunc func(
 		if err := recover(); err != nil {
 			if err != ErrInvokeDefault {
 				status.fault = true
+				notifier.NotifyAll(NewEvent(EventFeatureWasFault, err))
 			}
 			if defaultFunc != nil {
 				defaultFunc()
@@ -56,6 +58,8 @@ func Invoke(context interface{}, featureName, funcName string, defaultFunc func(
 		}
 	}()
 	if status == nil {
+		event := NewEvent(EventFeatureHasNotBeenAdded, fmt.Errorf("feature `%s` has not been added", featureName))
+		notifier.NotifyAll(event)
 		panic(ErrInvokeDefault)
 	}
 	if status.fault {
@@ -63,6 +67,8 @@ func Invoke(context interface{}, featureName, funcName string, defaultFunc func(
 	}
 	f := reflect.ValueOf(status.feature).MethodByName(funcName)
 	if !f.IsValid() {
+		event := NewEvent(EventFeatureMethodMissing, fmt.Errorf("method `%v` is not found in feature `%v`", funcName, featureName))
+		notifier.NotifyAll(event)
 		panic(ErrMethodMissing)
 	}
 	if status.feature.ActiveIf(context, options...) {
