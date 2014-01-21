@@ -17,7 +17,6 @@ type status struct {
 
 var (
 	ErrInvokeDefault = errors.New("invoke defualt")
-	ErrMethodMissing = errors.New("method missing")
 )
 
 // Feature is an interface of feature.
@@ -69,7 +68,7 @@ func Invoke(context interface{}, featureName, funcName string, defaultFunc func(
 	if !f.IsValid() {
 		event := NewEvent(EventFeatureMethodMissing, fmt.Errorf("method `%v` is not found in feature `%v`", funcName, featureName))
 		notifier.NotifyAll(event)
-		panic(ErrMethodMissing)
+		panic(ErrInvokeDefault)
 	}
 	if status.feature.ActiveIf(context, options...) {
 		f.Call([]reflect.Value{reflect.ValueOf(context)})
