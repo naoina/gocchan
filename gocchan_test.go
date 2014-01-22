@@ -43,6 +43,56 @@ func (f *TestFeature) FuncPanic(context interface{}) {
 	panic("expected panic")
 }
 
+func Test_ActiveIf(t *testing.T) {
+	func() {
+		defer func() {
+			featureStatus = make(map[string]*status)
+		}()
+		if featureStatus["test"] != nil {
+			t.Fatalf("feature has already been added")
+		}
+		var actual interface{} = ActiveIf("test", "ctx1", "opt1")
+		var expected interface{} = false
+		if !reflect.DeepEqual(actual, expected) {
+			t.Errorf("Expect %q, but %q", expected, actual)
+		}
+	}()
+
+	for _, v := range []struct {
+		fault, active, expected bool
+		calledBy                []string
+	}{
+		{false, true, true, []string{"ctx1:[opt1]"}},
+		{false, false, false, []string{"ctx1:[opt1]"}},
+		{true, true, false, nil},
+		{true, false, false, nil},
+	} {
+		func() {
+			defer func() {
+				featureStatus = make(map[string]*status)
+			}()
+			if featureStatus["test"] != nil {
+				t.Fatalf("feature has already been added")
+			}
+			feature := &TestFeature{t, "test1", v.active, nil, nil}
+			featureStatus["test"] = &status{
+				feature: feature,
+				fault:   v.fault,
+			}
+			var actual interface{} = ActiveIf("test", "ctx1", "opt1")
+			var expected interface{} = v.expected
+			if !reflect.DeepEqual(actual, expected) {
+				t.Errorf("fault is %#v, active is %#v expect %q, but %q", v.fault, v.active, expected, actual)
+			}
+			actual = feature.activeIfCalledBy
+			expected = v.calledBy
+			if !reflect.DeepEqual(actual, expected) {
+				t.Errorf("fault is %#v, active is %#v expect %q, but %q", v.fault, v.active, expected, actual)
+			}
+		}()
+	}
+}
+
 func Test_AddFeature(t *testing.T) {
 	func() {
 		defer func() {

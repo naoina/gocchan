@@ -25,6 +25,15 @@ type Feature interface {
 	ActiveIf(context interface{}, options ...interface{}) bool
 }
 
+// ActiveIf returns true if ActiveIf of Feature returns true, otherwise returns false.
+func ActiveIf(featureName string, context interface{}, options ...interface{}) bool {
+	status := featureStatus[featureName]
+	if status == nil || status.fault {
+		return false
+	}
+	return status.feature.ActiveIf(context, options...)
+}
+
 // AddFeature adds feature with name.
 // If feature is nil, it panic.
 func AddFeature(name string, feature Feature) {
