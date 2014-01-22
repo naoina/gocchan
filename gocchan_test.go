@@ -282,3 +282,58 @@ func Test_Invoke(t *testing.T) {
 		}
 	}()
 }
+
+func Test_IsActive(t *testing.T) {
+	func() {
+		defer func() {
+			featureStatus = make(map[string]*status)
+		}()
+		st := featureStatus["testIsActive"]
+		if st != nil {
+			t.Fatalf("feature has already been added")
+		}
+		featureStatus["testIsActive"] = &status{
+			feature: &TestFeature{t, "test", true, nil, nil},
+			fault:   false,
+		}
+		actual := IsActive("testIsActive")
+		expected := true
+		if !reflect.DeepEqual(actual, expected) {
+			t.Errorf("Expect %q, but %q", expected, actual)
+		}
+	}()
+
+	func() {
+		defer func() {
+			featureStatus = make(map[string]*status)
+		}()
+		st := featureStatus["testIsActive"]
+		if st != nil {
+			t.Fatalf("feature has already been added")
+		}
+		actual := IsActive("testIsActive")
+		expected := false
+		if !reflect.DeepEqual(actual, expected) {
+			t.Errorf("Expect %q, but %q", expected, actual)
+		}
+	}()
+
+	func() {
+		defer func() {
+			featureStatus = make(map[string]*status)
+		}()
+		st := featureStatus["testIsActive"]
+		if st != nil {
+			t.Fatalf("feature has already been added")
+		}
+		featureStatus["testIsActive"] = &status{
+			feature: &TestFeature{t, "test", true, nil, nil},
+			fault:   true,
+		}
+		actual := IsActive("testIsActive")
+		expected := false
+		if !reflect.DeepEqual(actual, expected) {
+			t.Errorf("Expect %q, but %q", expected, actual)
+		}
+	}()
+}

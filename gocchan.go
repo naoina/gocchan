@@ -94,3 +94,12 @@ func Invoke(context interface{}, featureName, funcName string, defaultFunc func(
 	}
 	f.Call([]reflect.Value{cvalue})
 }
+
+// IsActive returns true if feature is active, otherwise returns false.
+func IsActive(featureName string) bool {
+	status := featureStatus[featureName]
+	if status == nil {
+		return false
+	}
+	return !status.fault
+}
